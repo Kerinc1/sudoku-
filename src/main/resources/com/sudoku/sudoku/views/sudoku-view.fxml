@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+    Vista principal del Sudoku 6×6 — HU-1 (maquetación base).
+
+    Estructura:
+      top    → encabezado con el nombre del juego
+      center → GridPane vacío; el controlador lo puebla con las 36 celdas
+      bottom → barra de acciones del jugador
+
+    Los botones "Validar" y "Reiniciar" arrancan deshabilitados porque
+    no hay partida activa al inicio.
+-->
+<BorderPane
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.sudoku.sudoku.controller.SudokuController"
+        stylesheets="@sudoku-styles.css"
+        styleClass="root-pane">
+
+    <top>
+        <VBox styleClass="header" alignment="CENTER" spacing="6">
+            <padding>
+                <Insets top="22" right="40" bottom="22" left="40"/>
+            </padding>
+            <Label text="Sudoku 6×6" styleClass="title-label"/>
+            <Label text="Sin repetir números en filas, columnas ni bloques de 2×3"
+                   styleClass="subtitle-label"/>
+        </VBox>
+    </top>
+
+    <!--
+        El GridPane se rellena programáticamente en initialize() del controlador.
+        Los bordes gruesos de los bloques 2×3 se calculan por posición en Java
+        porque dependen de la fila y columna de cada celda, algo que CSS no puede hacer.
+    -->
+    <center>
+        <VBox alignment="CENTER" styleClass="board-container">
+            <GridPane fx:id="sudokuGrid"
+                      hgap="0" vgap="0"
+                      alignment="CENTER"
+                      styleClass="sudoku-grid"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER" spacing="14" styleClass="controls-bar">
+            <padding>
+                <Insets top="18" right="30" bottom="22" left="30"/>
+            </padding>
+            <Button fx:id="btnStart"
+                    text="Iniciar Juego"
+                    styleClass="btn-primary"
+                    onAction="#onIniciarJuego"/>
+            <Button fx:id="btnValidate"
+                    text="Validar"
+                    styleClass="btn-success"
+                    onAction="#onValidar"
+                    disable="true"/>
+            <Button fx:id="btnReset"
+                    text="Reiniciar"
+                    styleClass="btn-danger"
+                    onAction="#onReiniciar"
+                    disable="true"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

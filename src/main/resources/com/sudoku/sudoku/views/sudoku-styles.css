@@ -1,0 +1,164 @@
+/* =========================================================
+   sudoku-styles.css  —  Sudoku 6×6  |  HU-1
+   Diseño inspirado en Bootstrap 5, adaptado a JavaFX CSS.
+   ========================================================= */
+
+
+/* ── Fondo de la ventana ── */
+.root-pane {
+    -fx-background-color: #f0f2f5;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+
+/* ══════════════════════════════
+   Encabezado
+   ══════════════════════════════ */
+.header {
+    -fx-background-color: #1a2a4a;
+}
+
+.title-label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+.subtitle-label {
+    -fx-text-fill: #8fa8c8;
+    -fx-font-size: 13px;
+}
+
+
+/* ══════════════════════════════
+   Tablero
+   ══════════════════════════════ */
+.board-container {
+    -fx-padding: 36 40 28 40;
+    -fx-alignment: center;
+}
+
+/* Sombra para dar profundidad al tablero sobre el fondo gris */
+.sudoku-grid {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.22), 18, 0.0, 0, 5);
+}
+
+
+/* ══════════════════════════════
+   Celdas del tablero
+   ══════════════════════════════
+   Solo se definen aquí tamaño, fondo y tipografía.
+   Grosor y color de borde se inyectan inline desde el controlador
+   porque varían por posición (bordes de bloque 2×3 vs. líneas interiores). */
+
+.cell {
+    -fx-pref-width: 64px;
+    -fx-pref-height: 64px;
+    -fx-min-width: 64px;
+    -fx-min-height: 64px;
+    -fx-max-width: 64px;
+    -fx-max-height: 64px;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+/* Resalte al enfocar: solo fondo, sin anillo JavaFX por defecto */
+.cell:focused {
+    -fx-background-color: #dde9fc;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/*
+   Estados de celda — usados en HU-2 en adelante.
+   Se definen aquí para que el CSS esté completo desde el inicio.
+*/
+
+/* Celda pre-rellena por el puzzle (no editable) */
+.cell-fixed {
+    -fx-background-color: #e4e8ef;
+    -fx-text-fill: #1a2a4a;
+}
+
+/* Celda editable con valor ingresado por el jugador */
+.cell-user {
+    -fx-text-fill: #1565c0;
+}
+
+/* Celda con error detectado en la validación */
+.cell-error {
+    -fx-background-color: #fdecea;
+    -fx-text-fill: #c62828;
+}
+
+
+/* ══════════════════════════════
+   Barra de controles
+   ══════════════════════════════ */
+.controls-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 1 0 0 0;   /* solo la línea superior para separar del tablero */
+}
+
+
+/* ══════════════════════════════
+   Botones — Bootstrap 5
+   ══════════════════════════════ */
+
+.btn-primary {
+    -fx-background-color: #0d6efd;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 26 10 26;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+}
+.btn-primary:hover   { -fx-background-color: #0b5ed7; }
+.btn-primary:pressed { -fx-background-color: #0a58ca; }
+.btn-primary:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.btn-success {
+    -fx-background-color: #198754;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 26 10 26;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+}
+.btn-success:hover   { -fx-background-color: #157347; }
+.btn-success:pressed { -fx-background-color: #146c43; }
+.btn-success:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.btn-danger {
+    -fx-background-color: #dc3545;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 26 10 26;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+}
+.btn-danger:hover   { -fx-background-color: #bb2d3b; }
+.btn-danger:pressed { -fx-background-color: #b02a37; }
+.btn-danger:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* JavaFX baja la opacidad al 40 % en nodos disabled — no necesitamos regla extra */
