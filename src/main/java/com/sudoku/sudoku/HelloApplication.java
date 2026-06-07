@@ -15,7 +15,7 @@ import java.io.IOException;
  * más los márgenes de la interfaz.</p>
  *
  * @author Jhon Acosta
- * @version 1.0
+ * @version 1.1
  */
 public class HelloApplication extends Application {
 
@@ -25,7 +25,7 @@ public class HelloApplication extends Application {
             HelloApplication.class.getResource("views/sudoku-view.fxml")
         );
         Scene scene = new Scene(fxmlLoader.load(), 484, 618);
-        stage.setTitle("Sudoku 6×6");
+        stage.setTitle("Sudoku");
         stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
