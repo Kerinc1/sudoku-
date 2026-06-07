@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Modelo del juego Sudoku 6×6 — HU-2.
+ * Modelo del juego Sudoku 6×6 — HU-3.
  *
  * <p>Almacena el estado del tablero como una matriz {@code int[][]} donde
  * {@code 0} representa celda vacía y {@code 1–6} un número colocado.
@@ -14,12 +14,17 @@ import java.util.Random;
  * {@value #PISTAS_POR_BLOQUE} pistas aleatorias válidas en cada uno de los
  * {@value #TOTAL_BLOQUES} bloques de 2×3, sin ningún import de JavaFX.</p>
  *
+ * <p>Desde HU-3 el modelo distingue entre celdas fijas (pistas) y celdas
+ * libres (editables por el jugador). {@link #setValor(int, int, int)} almacena
+ * la entrada del usuario; {@link #resetearJugador()} devuelve el tablero al
+ * estado inicial sin regenerar las pistas.</p>
+ *
  * <p>La validez se garantiza revisando fila, columna y bloque antes de
  * aceptar cada número. Si un intento parcial queda sin candidatos para alguna
  * celda, el proceso se descarta y reinicia hasta obtener un tablero limpio.</p>
  *
  * @author Jhon Acosta
- * @version 2.0
+ * @version 3.0
  */
 public class SudokuModel {
 
@@ -62,6 +67,37 @@ public class SudokuModel {
      */
     public boolean esFija(int fila, int col) {
         return fija[fila][col];
+    }
+
+    // ── Escritura del estado (jugador) ────────────────────────────────────────
+
+    /**
+     * Almacena un número ingresado por el jugador en la celda indicada.
+     * La invocación se ignora silenciosamente si la celda es una pista fija,
+     * garantizando que las pistas iniciales nunca sean sobreescritas.
+     *
+     * @param fila  fila del tablero (0–5)
+     * @param col   columna del tablero (0–5)
+     * @param valor número a guardar (1–6) o {@code 0} para limpiar la celda
+     */
+    public void setValor(int fila, int col, int valor) {
+        if (!fija[fila][col]) {
+            tablero[fila][col] = valor;
+        }
+    }
+
+    /**
+     * Restablece a {@code 0} todas las celdas no fijas, devolviendo el tablero
+     * al estado inicial de la partida actual sin regenerar ni mover las pistas.
+     */
+    public void resetearJugador() {
+        for (int f = 0; f < TAMAÑO; f++) {
+            for (int c = 0; c < TAMAÑO; c++) {
+                if (!fija[f][c]) {
+                    tablero[f][c] = 0;
+                }
+            }
+        }
     }
 
     // ── Generación del tablero ────────────────────────────────────────────────
