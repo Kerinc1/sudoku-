@@ -1,15 +1,19 @@
 package com.sudoku.sudoku.controller;
 
 import com.sudoku.sudoku.model.SudokuModel;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
+import javafx.util.Duration;
 
 /**
  * Controlador de la vista Sudoku 6×6 — HU-3.
@@ -25,7 +29,7 @@ import javafx.scene.layout.GridPane;
  * celdas con pistas bloquean completamente cualquier interacción del usuario.</p>
  *
  * @author Jhon Acosta
- * @version 3.0
+ * @version 3.1
  */
 public class SudokuController {
 
@@ -34,8 +38,14 @@ public class SudokuController {
     @FXML private Button   btnStart;
     @FXML private Button   btnValidate;
     @FXML private Button   btnReset;
+    @FXML private Button   btnAyuda;
+    @FXML private Label    lblMensaje;
 
     private static final int TAMAÑO = SudokuModel.TAMAÑO;
+    private static final int MAX_AYUDAS = 3;
+
+    private int    ayudasUsadas = 0;
+    private int[]  celdaAyuda   = null;
 
     /**
      * Referencias directas a cada TextField para evitar consultas costosas
@@ -45,6 +55,8 @@ public class SudokuController {
 
     /** Única instancia del modelo; el controlador solo conoce su interfaz pública. */
     private final SudokuModel modelo = new SudokuModel();
+
+    private Timeline ocultarMensaje;
 
     /**
      * JavaFX invoca este método al terminar de cargar el FXML.
@@ -65,6 +77,7 @@ public class SudokuController {
                 sudokuGrid.add(celda, col, fila);
             }
         }
+        lblMensaje.setVisible(false);
     }
 
     // ── Manejadores de botones ────────────────────────────────────────────────
@@ -84,18 +97,40 @@ public class SudokuController {
         );
         if (!gestor.confirmar()) return;
 
+        ayudasUsadas = 0;
+        celdaAyuda   = null;
         modelo.generarTablero();
         renderizarTablero();
 
         // Los botones de acción solo tienen sentido con una partida activa
         btnValidate.setDisable(false);
         btnReset.setDisable(false);
+        btnAyuda.setDisable(false);
+        actualizarTextoAyuda();
+        ocultarMensajeBanner();
     }
 
     /** @see SudokuController — lógica en HU-4 */
     @FXML
     private void onValidar() {
-        System.out.println("Botón Validar presionado");
+        boolean hayErrores = false;
+        boolean completo   = true;
+
+        for (int f = 0; f < TAMAÑO; f++) {
+            for (int c = 0; c < TAMAÑO; c++) {
+                if (modelo.getValor(f, c) == 0)           completo   = false;
+                if (!modelo.esFija(f, c) && modelo.getValor(f, c) != 0
+                        && modelo.hayConflicto(f, c))     hayErrores = true;
+            }
+        }
+
+        if (hayErrores) {
+            mostrarBanner("Hay errores en el tablero.", "banner-error");
+        } else if (completo) {
+            mostrarBanner("Sudoku completado correctamente.", "banner-ok");
+        } else {
+            mostrarBanner("Sin errores hasta ahora.", "banner-ok");
+        }
     }
 
     /**
@@ -104,8 +139,81 @@ public class SudokuController {
      */
     @FXML
     private void onReiniciar() {
+        ayudasUsadas = 0;
+        celdaAyuda   = null;
         modelo.resetearJugador();
         renderizarTablero();
+        actualizarTextoAyuda();
+        ocultarMensajeBanner();
+    }
+
+    @FXML
+    private void onAyuda() {
+        if (ayudasUsadas >= MAX_AYUDAS) {
+            mostrarBanner("Límite de ayudas alcanzado (" + MAX_AYUDAS + "/" + MAX_AYUDAS + ").", "banner-warn");
+            return;
+        }
+
+        int[] sugerencia = modelo.sugerirCelda();
+        if (sugerencia == null) {
+            mostrarBanner("No hay celdas vacías disponibles.", "banner-warn");
+            return;
+        }
+
+        limpiarResaltadoAyuda();
+
+        int f = sugerencia[0], c = sugerencia[1], val = sugerencia[2];
+        ayudasUsadas++;
+
+        celdaAyuda = new int[]{f, c};
+        TextField celda = celdas[f][c];
+        celda.setText("? → " + val);
+        celda.getStyleClass().removeAll("cell-user", "cell-error", "cell-hint");
+        celda.getStyleClass().add("cell-hint");
+
+        actualizarTextoAyuda();
+        mostrarBanner(
+                "Sugerencia: coloca " + val + " en fila " + (f + 1) + ", columna " + (c + 1) + ".",
+                "banner-hint"
+        );
+    }
+
+    // ── Ayuda: helpers ───────────────────────────────────────────────────────
+
+    private void limpiarResaltadoAyuda() {
+        if (celdaAyuda == null) return;
+        int f = celdaAyuda[0], c = celdaAyuda[1];
+        TextField celda = celdas[f][c];
+        celda.getStyleClass().remove("cell-hint");
+        int val = modelo.getValor(f, c);
+        celda.setText(val == 0 ? "" : String.valueOf(val));
+        celdaAyuda = null;
+    }
+
+    private void actualizarTextoAyuda() {
+        int restantes = MAX_AYUDAS - ayudasUsadas;
+        btnAyuda.setText("Ayuda (" + restantes + ")");
+        btnAyuda.setDisable(restantes <= 0);
+    }
+
+    // ── Banner ───────────────────────────────────────────────────────────────
+
+    private void mostrarBanner(String texto, String estilo) {
+        lblMensaje.setText(texto);
+        lblMensaje.getStyleClass().removeAll("banner-ok", "banner-error", "banner-warn", "banner-hint");
+        lblMensaje.getStyleClass().add(estilo);
+        lblMensaje.setVisible(true);
+
+        if (ocultarMensaje != null) ocultarMensaje.stop();
+        ocultarMensaje = new Timeline(
+                new KeyFrame(Duration.seconds(4), e -> lblMensaje.setVisible(false))
+        );
+        ocultarMensaje.play();
+    }
+
+    private void ocultarMensajeBanner() {
+        if (ocultarMensaje != null) ocultarMensaje.stop();
+        lblMensaje.setVisible(false);
     }
 
     // ── Renderizado ──────────────────────────────────────────────────────────
@@ -125,7 +233,7 @@ public class SudokuController {
                 TextField celda = celdas[fila][col];
 
                 // Limpiar estilos de estado para que el repintado sea idempotente
-                celda.getStyleClass().removeAll("cell-fixed", "cell-user", "cell-error");
+                celda.getStyleClass().removeAll("cell-fixed", "cell-user", "cell-error", "cell-hint");
 
                 if (modelo.esFija(fila, col)) {
                     celda.setText(String.valueOf(modelo.getValor(fila, col)));
@@ -136,6 +244,86 @@ public class SudokuController {
                     celda.setText(valor == 0 ? "" : String.valueOf(valor));
                     if (valor != 0) celda.getStyleClass().add("cell-user");
                     habilitarCeldaEditable(fila, col, celda);
+                }
+            }
+        }
+    }
+
+    /**
+     * Actualiza los estilos de error de todas las celdas editables del tablero.
+     *
+     * <p>Recorre el tablero completo y marca en rojo (<code>.cell-error</code>)
+     * todas aquellas celdas no fijas que contengan un número con conflicto.
+     * Los conflictos se detectan buscando duplicados en tres niveles:</p>
+     *
+     * <ul>
+     *   <li><strong>Fila:</strong> si existe otro número idéntico en la misma fila</li>
+     *   <li><strong>Columna:</strong> si existe otro número idéntico en la misma columna</li>
+     *   <li><strong>Bloque 2×3:</strong> si existe otro número idéntico en el mismo bloque</li>
+     * </ul>
+     *
+     * <p>A diferencia de versiones anteriores, este método marca <strong>TODOS</strong>
+     * los números que participan en un conflicto, no solo el que fue ingresado más
+     * recientemente. Por ejemplo, si hay dos '3' en la misma fila, ambos se marcarán
+     * en rojo.</p>
+     *
+     * <p>Las celdas fijas (pistas iniciales) se omiten de la validación.
+     * Las celdas vacías (valor = 0) no pueden tener conflictos.</p>
+     *
+     * @since 1.1
+     * @see #manejarCaracter(KeyEvent) para el punto de invocación desde entrada de usuario
+     */
+    private void actualizarValidacion() {
+        for (int f = 0; f < TAMAÑO; f++) {
+            for (int c = 0; c < TAMAÑO; c++) {
+                if (modelo.esFija(f, c)) continue;
+                
+                TextField celda = celdas[f][c];
+                celda.getStyleClass().removeAll("cell-error");
+                
+                int valor = modelo.getValor(f, c);
+                if (valor == 0) continue;  // Celda vacía no tiene conflicto posible
+                
+                // Verificar si esta celda tiene conflicto con algún otro número igual
+                boolean tieneConflicto = false;
+                
+                // Buscar duplicados en la FILA
+                for (int c2 = 0; c2 < TAMAÑO; c2++) {
+                    if (c2 != c && modelo.getValor(f, c2) == valor) {
+                        tieneConflicto = true;
+                        break;
+                    }
+                }
+                
+                // Buscar duplicados en la COLUMNA
+                if (!tieneConflicto) {
+                    for (int f2 = 0; f2 < TAMAÑO; f2++) {
+                        if (f2 != f && modelo.getValor(f2, c) == valor) {
+                            tieneConflicto = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Buscar duplicados en el BLOQUE 2×3
+                if (!tieneConflicto) {
+                    int filaBloq = (f / 2) * 2;
+                    int colBloq = (c / 3) * 3;
+                    for (int df = 0; df < 2; df++) {
+                        for (int dc = 0; dc < 3; dc++) {
+                            int f2 = filaBloq + df;
+                            int c2 = colBloq + dc;
+                            if ((f2 != f || c2 != c) && modelo.getValor(f2, c2) == valor) {
+                                tieneConflicto = true;
+                                break;
+                            }
+                        }
+                        if (tieneConflicto) break;
+                    }
+                }
+                
+                if (tieneConflicto) {
+                    celda.getStyleClass().add("cell-error");
                 }
             }
         }
@@ -284,10 +472,12 @@ public class SudokuController {
         private void manejarBorrado(KeyEvent evento) {
             KeyCode codigo = evento.getCode();
             if (codigo == KeyCode.BACK_SPACE || codigo == KeyCode.DELETE) {
+                limpiarResaltadoAyuda();
                 TextField celda = celdas[fila][col];
                 celda.setText("");
-                celda.getStyleClass().removeAll("cell-user");
+                celda.getStyleClass().removeAll("cell-user", "cell-error");
                 modelo.setValor(fila, col, 0);
+                actualizarValidacion();
                 evento.consume();
             }
         }
@@ -298,20 +488,35 @@ public class SudokuController {
          * en el modelo. Cualquier otro carácter (letras, símbolos, 0, 7–9) es
          * consumido antes de llegar al TextField, dejando la celda intacta.
          *
+         * <p>Una vez almacenado el número en el modelo, invoca a
+         * {@link #actualizarValidacion()} para marcar TODAS las celdas que tengan
+         * conflictos (no solo la celda actual). Esto asegura que todos los
+         * números duplicados en una fila, columna o bloque se pinten en rojo.</p>
+         *
          * @param evento evento KEY_TYPED capturado por el filtro
          */
         private void manejarCaracter(KeyEvent evento) {
             String caracter = evento.getCharacter();
             if (caracter.length() == 1) {
-                char c = caracter.charAt(0);
-                if (c >= '1' && c <= '6') {
-                    int numero = c - '0';
+                char ch = caracter.charAt(0);
+                if (ch >= '1' && ch <= '6') {
+                    int numero = ch - '0';
+                    limpiarResaltadoAyuda();
                     TextField celda = celdas[fila][col];
                     celda.setText(String.valueOf(numero));
-                    if (!celda.getStyleClass().contains("cell-user")) {
-                        celda.getStyleClass().add("cell-user");
-                    }
+                    celda.getStyleClass().removeAll("cell-user", "cell-error", "cell-hint");
+                    celda.getStyleClass().add("cell-user");
                     modelo.setValor(fila, col, numero);
+
+
+                    actualizarValidacion();   // valida todo el tablero
+
+                    if (modelo.hayConflicto(fila, col)) {
+                        celda.getStyleClass().remove("cell-user");
+                        celda.getStyleClass().add("cell-error");
+                        mostrarBanner("Número repetido en fila, columna o bloque.", "banner-error");
+                    }
+
                     evento.consume();
                     return;
                 }
