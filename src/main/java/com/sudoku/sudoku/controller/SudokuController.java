@@ -28,6 +28,9 @@ import javafx.util.Duration;
  * del 1 al 6, actualizando el modelo y la vista de forma sincrónica. Las
  * celdas con pistas bloquean completamente cualquier interacción del usuario.</p>
  *
+ * <p>A partir de la versión 3.1, el sistema de ayudas es ilimitado, permitiendo
+ * al jugador solicitar sugerencias sin restricción de cantidad.</p>
+ *
  * @author Jhon Acosta
  * @version 3.1
  */
@@ -42,9 +45,7 @@ public class SudokuController {
     @FXML private Label    lblMensaje;
 
     private static final int TAMAÑO = SudokuModel.TAMAÑO;
-    private static final int MAX_AYUDAS = 3;
 
-    private int    ayudasUsadas = 0;
     private int[]  celdaAyuda   = null;
 
     /**
@@ -97,7 +98,6 @@ public class SudokuController {
         );
         if (!gestor.confirmar()) return;
 
-        ayudasUsadas = 0;
         celdaAyuda   = null;
         modelo.generarTablero();
         renderizarTablero();
@@ -139,7 +139,6 @@ public class SudokuController {
      */
     @FXML
     private void onReiniciar() {
-        ayudasUsadas = 0;
         celdaAyuda   = null;
         modelo.resetearJugador();
         renderizarTablero();
@@ -149,8 +148,8 @@ public class SudokuController {
 
     @FXML
     private void onAyuda() {
-        if (ayudasUsadas >= MAX_AYUDAS) {
-            mostrarBanner("Límite de ayudas alcanzado (" + MAX_AYUDAS + "/" + MAX_AYUDAS + ").", "banner-warn");
+        if (modelo.getValorAyuda() == 35) {
+            mostrarBanner("Las ayudas están desactivadas para el último numero", "banner-warn");
             return;
         }
 
@@ -163,7 +162,6 @@ public class SudokuController {
         limpiarResaltadoAyuda();
 
         int f = sugerencia[0], c = sugerencia[1], val = sugerencia[2];
-        ayudasUsadas++;
 
         celdaAyuda = new int[]{f, c};
         TextField celda = celdas[f][c];
@@ -191,9 +189,8 @@ public class SudokuController {
     }
 
     private void actualizarTextoAyuda() {
-        int restantes = MAX_AYUDAS - ayudasUsadas;
-        btnAyuda.setText("Ayuda (" + restantes + ")");
-        btnAyuda.setDisable(restantes <= 0);
+        btnAyuda.setText("Ayuda");
+        btnAyuda.setDisable(false);
     }
 
     // ── Banner ───────────────────────────────────────────────────────────────
@@ -249,82 +246,14 @@ public class SudokuController {
         }
     }
 
-    /**
-     * Actualiza los estilos de error de todas las celdas editables del tablero.
-     *
-     * <p>Recorre el tablero completo y marca en rojo (<code>.cell-error</code>)
-     * todas aquellas celdas no fijas que contengan un número con conflicto.
-     * Los conflictos se detectan buscando duplicados en tres niveles:</p>
-     *
-     * <ul>
-     *   <li><strong>Fila:</strong> si existe otro número idéntico en la misma fila</li>
-     *   <li><strong>Columna:</strong> si existe otro número idéntico en la misma columna</li>
-     *   <li><strong>Bloque 2×3:</strong> si existe otro número idéntico en el mismo bloque</li>
-     * </ul>
-     *
-     * <p>A diferencia de versiones anteriores, este método marca <strong>TODOS</strong>
-     * los números que participan en un conflicto, no solo el que fue ingresado más
-     * recientemente. Por ejemplo, si hay dos '3' en la misma fila, ambos se marcarán
-     * en rojo.</p>
-     *
-     * <p>Las celdas fijas (pistas iniciales) se omiten de la validación.
-     * Las celdas vacías (valor = 0) no pueden tener conflictos.</p>
-     *
-     * @since 1.1
-     * @see #manejarCaracter(KeyEvent) para el punto de invocación desde entrada de usuario
-     */
     private void actualizarValidacion() {
         for (int f = 0; f < TAMAÑO; f++) {
             for (int c = 0; c < TAMAÑO; c++) {
                 if (modelo.esFija(f, c)) continue;
-                
                 TextField celda = celdas[f][c];
                 celda.getStyleClass().removeAll("cell-error");
-                
-                int valor = modelo.getValor(f, c);
-                if (valor == 0) continue;  // Celda vacía no tiene conflicto posible
-                
-                // Verificar si esta celda tiene conflicto con algún otro número igual
-                boolean tieneConflicto = false;
-                
-                // Buscar duplicados en la FILA
-                for (int c2 = 0; c2 < TAMAÑO; c2++) {
-                    if (c2 != c && modelo.getValor(f, c2) == valor) {
-                        tieneConflicto = true;
-                        break;
-                    }
-                }
-                
-                // Buscar duplicados en la COLUMNA
-                if (!tieneConflicto) {
-                    for (int f2 = 0; f2 < TAMAÑO; f2++) {
-                        if (f2 != f && modelo.getValor(f2, c) == valor) {
-                            tieneConflicto = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // Buscar duplicados en el BLOQUE 2×3
-                if (!tieneConflicto) {
-                    int filaBloq = (f / 2) * 2;
-                    int colBloq = (c / 3) * 3;
-                    for (int df = 0; df < 2; df++) {
-                        for (int dc = 0; dc < 3; dc++) {
-                            int f2 = filaBloq + df;
-                            int c2 = colBloq + dc;
-                            if ((f2 != f || c2 != c) && modelo.getValor(f2, c2) == valor) {
-                                tieneConflicto = true;
-                                break;
-                            }
-                        }
-                        if (tieneConflicto) break;
-                    }
-                }
-                
-                if (tieneConflicto) {
+                if (modelo.getValor(f, c) != 0 && modelo.hayConflicto(f, c))
                     celda.getStyleClass().add("cell-error");
-                }
             }
         }
     }
@@ -487,11 +416,6 @@ public class SudokuController {
          * en la celda con la clase CSS {@code .cell-user} y persiste el valor
          * en el modelo. Cualquier otro carácter (letras, símbolos, 0, 7–9) es
          * consumido antes de llegar al TextField, dejando la celda intacta.
-         *
-         * <p>Una vez almacenado el número en el modelo, invoca a
-         * {@link #actualizarValidacion()} para marcar TODAS las celdas que tengan
-         * conflictos (no solo la celda actual). Esto asegura que todos los
-         * números duplicados en una fila, columna o bloque se pinten en rojo.</p>
          *
          * @param evento evento KEY_TYPED capturado por el filtro
          */

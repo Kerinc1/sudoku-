@@ -24,9 +24,11 @@ public class HelloApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(
             HelloApplication.class.getResource("views/sudoku-view.fxml")
         );
-        Scene scene = new Scene(fxmlLoader.load(), 484, 618);
+        Scene scene = new Scene(fxmlLoader.load(), 620, 680);
         stage.setTitle("Sudoku");
-        stage.setResizable(false);
+        stage.setMinWidth(620);
+        stage.setMinHeight(680);
+        stage.setResizable(true);
         stage.setScene(scene);
         stage.show();
     }
