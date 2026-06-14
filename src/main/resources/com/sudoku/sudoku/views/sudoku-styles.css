@@ -162,3 +162,50 @@
 }
 
 /* JavaFX baja la opacidad al 40 % en nodos disabled — no necesitamos regla extra */
+
+/* Botón Ayuda */
+.btn-warning {
+    -fx-background-color: #fd7e14;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 26 10 26;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-cursor: hand;
+}
+.btn-warning:hover   { -fx-background-color: #e8680a; }
+.btn-warning:pressed { -fx-background-color: #d4580a; }
+.btn-warning:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Celda resaltada por la ayuda */
+.cell-hint {
+    -fx-background-color: #fff3cd;
+    -fx-text-fill: #856404;
+    -fx-font-size: 13px;
+}
+
+/* Banner de mensajes */
+.banner-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20 8 20;
+    -fx-background-radius: 6px;
+    -fx-alignment: center;
+}
+
+.banner-ok    { -fx-background-color: #d1e7dd; -fx-text-fill: #0a3622; }
+.banner-error { -fx-background-color: #fdecea; -fx-text-fill: #842029; }
+.banner-warn  { -fx-background-color: #fff3cd; -fx-text-fill: #664d03; }
+.banner-hint  { -fx-background-color: #cff4fc; -fx-text-fill: #055160; }
+
+/* Borde rojo explícito para mayor visibilidad en errores */
+.cell-error {
+    -fx-background-color: #fdecea;
+    -fx-text-fill: #c62828;
+    -fx-border-color: #ef5350 !important;
+    -fx-border-width: 2px !important;
+}

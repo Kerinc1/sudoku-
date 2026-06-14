@@ -31,8 +31,6 @@
                 <Insets top="22" right="40" bottom="22" left="40"/>
             </padding>
             <Label text="Sudoku 6×6" styleClass="title-label"/>
-            <Label text="Sin repetir números en filas, columnas ni bloques de 2×3"
-                   styleClass="subtitle-label"/>
         </VBox>
     </top>
 
@@ -42,11 +40,14 @@
         porque dependen de la fila y columna de cada celda, algo que CSS no puede hacer.
     -->
     <center>
-        <VBox alignment="CENTER" styleClass="board-container">
+        <VBox alignment="CENTER" styleClass="board-container" spacing="16">
             <GridPane fx:id="sudokuGrid"
                       hgap="0" vgap="0"
                       alignment="CENTER"
                       styleClass="sudoku-grid"/>
+            <!-- Banner de mensajes en tiempo real -->
+            <Label fx:id="lblMensaje" text="" styleClass="banner-label"
+                   wrapText="true" maxWidth="400" alignment="CENTER"/>
         </VBox>
     </center>
 
@@ -63,6 +64,11 @@
                     text="Validar"
                     styleClass="btn-success"
                     onAction="#onValidar"
+                    disable="true"/>
+            <Button fx:id="btnAyuda"
+                    text="Ayuda (3)"
+                    styleClass="btn-warning"
+                    onAction="#onAyuda"
                     disable="true"/>
             <Button fx:id="btnReset"
                     text="Reiniciar"
