@@ -113,6 +113,8 @@ public class SudokuController {
     /** @see SudokuController — lógica en HU-4 */
     @FXML
     private void onValidar() {
+        actualizarValidacion();
+
         boolean hayErrores = false;
         boolean completo   = true;
 
@@ -406,7 +408,6 @@ public class SudokuController {
                 celda.setText("");
                 celda.getStyleClass().removeAll("cell-user", "cell-error");
                 modelo.setValor(fila, col, 0);
-                actualizarValidacion();
                 evento.consume();
             }
         }
@@ -431,16 +432,6 @@ public class SudokuController {
                     celda.getStyleClass().removeAll("cell-user", "cell-error", "cell-hint");
                     celda.getStyleClass().add("cell-user");
                     modelo.setValor(fila, col, numero);
-
-
-                    actualizarValidacion();   // valida todo el tablero
-
-                    if (modelo.hayConflicto(fila, col)) {
-                        celda.getStyleClass().remove("cell-user");
-                        celda.getStyleClass().add("cell-error");
-                        mostrarBanner("Número repetido en fila, columna o bloque.", "banner-error");
-                    }
-
                     evento.consume();
                     return;
                 }

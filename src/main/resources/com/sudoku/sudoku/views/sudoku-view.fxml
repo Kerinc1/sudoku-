@@ -13,7 +13,7 @@
 
     Estructura:
       top    → encabezado con el nombre del juego
-      center → GridPane vacío; el controlador lo puebla con las 36 celdas
+      center → GridPane vacío; el controlador lo prueba con las 36 celdas
       bottom → barra de acciones del jugador
 
     Los botones "Validar" y "Reiniciar" arrancan deshabilitados porque
